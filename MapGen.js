@@ -1,4 +1,4 @@
-class MapNode {
+ class MapNode {
   constructor(type, height) {
     this.type = type;
     this.height = height;
@@ -81,19 +81,44 @@ class MapGenerator {
     return newMap;
   }
 
-  smoothing(arr, level, rounding){
+  level(arr, level, rounding){
     let arrLen = arr.length;
     for (let i = 0; i < arrLen; i++){
       for (let j = 0; j < arrLen; j++){
-        if ((arr[i][j]+level)*0.9 < 2){
-          arr[i][j] = (arr[i][j]+level)*0.9;
-        } else {
-          arr[i][j] = 1.8;
-        }
         arr[i][j] = Math.round(arr[i][j]*rounding)/rounding;
       }
     }
     return arr;
+  }
+
+  layerNoise(layers){
+    let mapArray = [];
+    let temp = 0;
+    for (let i = -1, row = 0; i < -0.5; i+=0.0004, row++){
+      mapArray.push([]);
+      for (let j = -1, col = 0; j < -0.5; j+=0.0004, col++){
+        temp = mapGen.simplexNoise([i,j])+1;
+        for (let layer = 0; layer < layers; layer++){
+          temp += mapGen.simplexNoise([(i+1)*layer-1,(j+1)*layer-1])+1;
+        }
+        mapArray[row].push(temp/layers);
+      }
+    }  
+    return mapArray;
+  }
+  
+  arrAdd2D(arr1, arr2, avg){
+    let length1 = arr1.length;
+    let length2 = arr1[0].length;
+    for (let i = 0; i < length1; i++){
+      for (let j = 0; j < length2; j++){
+        arr1[i][j] += arr2[i][j];
+        if (avg) {
+          arr1[i][j] /= 2;
+        }
+      }
+    }
+    return arr1;
   }
   
   gradientCalc(hash, x, y) {
@@ -165,16 +190,10 @@ var ctx = canvas.getContext("2d");
 
 
 ctx.fillRect(0, 0, canvas.width, canvas.height);
-mapGen = new MapGenerator(100,[""]);
-let mapArray = [];
-for (let i = -1, row = 0; i < 1; i+=0.00166666, row++){
-  mapArray.push([]);
-  for (let j = -1, col = 0; j < 1; j+=0.001666666, col++)
-  {
-    mapArray[row].push(mapGen.simplexNoise([i,j])+1);
-  }
-}
-//console.log(mapArray);
+mapGen = new MapGenerator(1200,[""]);
+
+let mapArray = mapGen.arrAdd2D(mapGen.layerNoise(Math.floor(Math.random()*25)+4),mapGen.layerNoise(Math.floor(Math.random()*5)+4), true); //Looks complicated but is actually pretty simple, adds two randomly selected layerings of noise together to form a more realistic and varied map
+
 let gaussArray7 = [[1,4,7,10,7,4,1],[4,12,26,33,26,12,4],[7,26,55,71,55,26,7],[10,33,71,91,71,33,10],[7,26,55,71,55,26,7],[4,12,26,33,26,12,4],[1,4,7,10,7,4,1]];
 for (let i=0; i < gaussArray7.length; i++){
   for (let j = 0; j < gaussArray7[0].length; j++){
@@ -182,16 +201,16 @@ for (let i=0; i < gaussArray7.length; i++){
   }
 }
 let newMap = mapGen.convolution(mapArray, gaussArray7, 7);
-newMap = mapGen.average(newMap, 12);
-//console.log(newMap);
-newMap = mapGen.smoothing(newMap, 0.001, 10000);
+newMap = mapGen.average(newMap, 8);
 
-//console.log(newMap);
+newMap = mapGen.level(newMap, 0.001, 10000);
+
 for (let i = -1, row = 0; i < 1; i+=0.00166666, row++){
   for (let j = -1, col = 0; j < 1; j+=0.001666666, col++)
   {
-    //console.log("#"+parseInt(((mapGen.simplexNoise([i,j])+1)*8388607)).toString(16));
-    ctx.fillStyle = "#"+parseInt((newMap[row][col]*8388607)).toString(16);
+    //(this.map[row][col]).setHeight(newMap[row][col]); 
+    ctx.fillStyle = "#00"+parseInt((newMap[row][col]*8388607)).toString(16);
     ctx.fillRect((i+1)*600, (j+1)*600, 1, 1);
+    //console.log("#"+parseInt((newMap[row][col]*8388607)).toString(16));
   }
 }
