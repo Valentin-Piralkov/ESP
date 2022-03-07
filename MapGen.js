@@ -1,4 +1,4 @@
- class MapNode {
+ class MapNode { //Class for each node in the map
   constructor(type, height) {
     this.type = type;
     this.height = height;
@@ -42,7 +42,7 @@ class MapGenerator {
 
   }
 
-  loadMap(arr,bioArr, startOffset){
+  loadMap(arr,bioArr, startOffset){ //Loads data from map into an array of MapNode objects
     let length1 = arr.length;
     let length2 = arr[0].length;
     this.map = [];
@@ -72,7 +72,7 @@ class MapGenerator {
     return newMap;
   }
 
-  average(arr, size){
+  average(arr, size){ //Gets the average of all heights nearby, allows the noise to more accurately match terrain
     let arrLen = arr.length;
     let newMap = [];
     //let newMap = Array.from({ length: arrLen }, () => (Array.from({ length: arrLen }, () => (0))));
@@ -96,7 +96,7 @@ class MapGenerator {
     return newMap;
   }
 
-  level(arr, rounding){
+  level(arr, rounding){ //Reduces the amount of heights to a set few so its more easily representable
     let arrLen = arr.length;
     for (let i = 0; i < arrLen; i++){
       for (let j = 0; j < arrLen; j++){
@@ -106,7 +106,7 @@ class MapGenerator {
     return arr;
   }
 
-  layerNoise(layers){
+  layerNoise(layers){ //Layers multiple noise frequencies on top of each other for more realistic terrain
     let mapArray = [];
     let temp = 0;
     for (let i = -1, row = 0; i < -0.5; i+=0.0004, row++){
@@ -122,21 +122,12 @@ class MapGenerator {
     return mapArray;
   }
   
-  arrAdd2D(arr1, arr2, avg, mirrorI, mirrorJ){
+  arrAdd2D(arr1, arr2, avg, mirrorI, mirrorJ){ //Adds two arrays
     let length1 = arr1.length;
     let length2 = arr1[0].length;
     for (let i = 0; i < length1; i++){
       for (let j = 0; j < length2; j++){
-        arr1[i][j] += arr2[(!mirrorI) ? i : length1-i-1][(!mirrorJ) ? j : length2-j-1]; //Slows down the code like a motherfucker but it looks nice so im keeping it for now
-        /*if (mirrorI && mirrorJ){
-          arr1[i][j] += arr2[length1-i-1][length2-j-1];
-        } else if (mirrorI) {
-          arr1[i][j] += arr2[length1-i-1][j];
-        } else if (mirrorJ) {
-          arr1[i][j] += arr2[i][length2-j-1];
-        } else {
-          arr1[i][j] += arr2[i][j];
-        }*/
+        arr1[i][j] += arr2[(!mirrorI) ? i : length1-i-1][(!mirrorJ) ? j : length2-j-1]; //Adds array 1 to 2, with the option to add them while mirrored in either direction
         if (avg) {
           arr1[i][j] /= 2;
         }
@@ -218,15 +209,9 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 mapGen = new MapGenerator(1200,[""]);
 
 console.time("Noise Layering");
-let mapArray = mapGen.arrAdd2D(mapGen.layerNoise(Math.floor(Math.random()*24)+7),mapGen.layerNoise(Math.floor(Math.random()*5)+7), true, true, false); //Looks complicated but is actually pretty simple, adds two randomly selected layerings of noise together to form a more realistic and varied map
+let mapArray = mapGen.arrAdd2D(mapGen.layerNoise(Math.floor(Math.random()*24)+7),mapGen.layerNoise(Math.floor(Math.random()*5)+9), true, true, false); //Looks complicated but is actually pretty simple, adds two randomly selected layerings of noise together to form a more realistic and varied map
 console.timeEnd("Noise Layering");
-/*let gaussArray7 = [[1,4,7,10,7,4,1],[4,12,26,33,26,12,4],[7,26,55,71,55,26,7],[10,33,71,91,71,33,10],[7,26,55,71,55,26,7],[4,12,26,33,26,12,4],[1,4,7,10,7,4,1]];
-for (let i=0; i < gaussArray7.length; i++){
-  for (let j = 0; j < gaussArray7[0].length; j++){
-    gaussArray7[i][j] *= 1/1100;
-  }
-}*/
-//let newMap = mapGen.convolution(mapArray, gaussArray7, 7);
+
 console.time("Averaging");
 let newMap = mapGen.average(mapArray, 8);
 console.timeEnd("Averaging");
@@ -237,19 +222,29 @@ console.time("leveling");
 newMap = mapGen.level(newMap, 10000);
 console.timeEnd("leveling");
 console.time("map loading");
-mapGen.loadMap(newMap, biomeMap, 13);
+mapGen.loadMap(newMap, biomeMap, 13); //Loads in map removing the 13 dead pixels at the top and left of the map
 console.timeEnd("map loading");
-for (let i = -0.9783333, row = 13; i < 1; i+=0.00166666, row++){
+let tot = 0;
+for (let i = -0.9783333, row = 13; i < 1; i+=0.00166666, row++){ //Rudimentary map display
+  // THERE IS A 13 PIXEL OFFSET AT THE TOP WHEN DISPLAYING, NOTE THIS IS NOT PRESENT IN THE mapGen's map, which is loaded in with the loadMap function
   for (let j = -0.9783333, col = 13; j < 1; j+=0.001666666, col++)
   {
+    tot += newMap[row][col];
     
-    if (biomeMap[row][col] == 0.001){
+    if (biomeMap[row][col] == 0.001){ //Fills the green areas
       ctx.fillStyle = "#00"+parseInt((newMap[row][col]*35000)).toString(16) + "00";
-    }
-    else { 
+    } else if(newMap[row][col] < 0.0039) { //Fills one part of beach
+      ctx.fillStyle = "#FFFACD";
+    } else if(newMap[row][col] < 0.0042) { //Fills water
+      ctx.fillStyle = "#0000"+parseInt((newMap[row][col]*35000)).toString(16);
+    } else if(newMap[row][col] < 0.00425) { // Fills other part of beach
+      ctx.fillStyle = "#FFFACD";
+    } else { //Fills biome 2
       ctx.fillStyle = "#"+parseInt((newMap[row][col]*40000)).toString(16).repeat(3);
     }
     ctx.fillRect((i+1)*600, (j+1)*600, 1, 1);
     //console.log(biomeMap[row][col]);
   }
 }
+tot /= (newMap.length-13)*(newMap.length-13);
+console.log(tot);
