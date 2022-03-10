@@ -54,6 +54,18 @@ class MapGenerator {
     }
   }
 
+  pullMap(){ //To get the map from the object
+    return (this.map);
+  }
+
+  pushMap(newmap){ //To directly add a new map overwriting the main map
+    this.map = newmap;
+  }
+
+  editMapNode(posX, posY, newNode){ //To directly change a map node into another (useful for editing small areas of the map without reloading the whole thing, will run faster)
+    this.map[posX][posY] = newNode;
+  }
+
   convolution(arr, kernel){
     let arrLen = arr.length;
     let kernLow = Math.floor(kernel.length/2);
@@ -199,7 +211,36 @@ class MapGenerator {
 
     return 45.23065*(n0 + n1 + n2);
   }
+
+  generateMap(method){
+    console.time("Noise Layering");
+    let mapArray = [];
+    if (method == 1){ //Added multiple methods of generating the map, they result in different terrain formations most of the time, method 2 performs similarly (sometimes a bit better) in runtime, method 3 performs significantly better but will produce a less visually pleasing result
+      mapArray = mapGen.arrAdd2D(mapGen.layerNoise(Math.floor(Math.random()*24)+7),mapGen.layerNoise(Math.floor(Math.random()*5)+9), true, true, false); //Looks complicated but is actually pretty simple, adds two randomly selected layerings of noise together to form a more realistic and varied map
+    } else if (method == 2) { //Method 2, many lower value noises
+      mapArray = mapGen.arrAdd2D(mapGen.layerNoise(Math.floor(Math.random()*5)+12),mapGen.layerNoise(Math.floor(Math.random()*5)+12), true, true, false); 
+      mapArray = mapGen.arrAdd2D(mapArray,mapGen.layerNoise(Math.floor(Math.random()*5)+12), true, false, true);
+      mapArray = mapGen.arrAdd2D(mapArray,mapGen.layerNoise(Math.floor(Math.random()*5)+12), true, true, true);
+    } else { //Method 3, a few lower value noises (same as method 2 but with fewer layers so that it runs faster) 
+      mapArray = mapGen.arrAdd2D(mapGen.layerNoise(Math.floor(Math.random()*5)+12),mapGen.layerNoise(Math.floor(Math.random()*5)+12), true, true, false); 
+      mapArray = mapGen.arrAdd2D(mapArray,mapGen.layerNoise(Math.floor(Math.random()*5)+12), true, false, true);
+    }
+    console.timeEnd("Noise Layering");
+    console.time("Averaging");
+    let newMap = mapGen.average(mapArray, 8);
+    console.timeEnd("Averaging");
+    console.time("leveling");
+    newMap = mapGen.level(newMap, 10000);
+    console.timeEnd("leveling");
+    const biomeMap = mapGen.level(mapGen.average(mapArray, 13), 1000);
+    console.time("map loading");
+    mapGen.loadMap(newMap, biomeMap, 13); //Loads in map removing the 13 dead pixels at the top and left of the map
+    console.timeEnd("map loading");
+    return [newMap,biomeMap];
+  }
 }
+
+
 
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
@@ -207,23 +248,7 @@ var ctx = canvas.getContext("2d");
 
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 mapGen = new MapGenerator(1200,[""]);
-
-console.time("Noise Layering");
-let mapArray = mapGen.arrAdd2D(mapGen.layerNoise(Math.floor(Math.random()*24)+7),mapGen.layerNoise(Math.floor(Math.random()*5)+9), true, true, false); //Looks complicated but is actually pretty simple, adds two randomly selected layerings of noise together to form a more realistic and varied map
-console.timeEnd("Noise Layering");
-
-console.time("Averaging");
-let newMap = mapGen.average(mapArray, 8);
-console.timeEnd("Averaging");
-
-let biomeMap = mapGen.level(mapGen.average(mapArray, 13), 1000);
-
-console.time("leveling");
-newMap = mapGen.level(newMap, 10000);
-console.timeEnd("leveling");
-console.time("map loading");
-mapGen.loadMap(newMap, biomeMap, 13); //Loads in map removing the 13 dead pixels at the top and left of the map
-console.timeEnd("map loading");
+let [newMap,biomeMap] = mapGen.generateMap(1);
 let tot = 0;
 for (let i = -0.9783333, row = 13; i < 1; i+=0.00166666, row++){ //Rudimentary map display
   // THERE IS A 13 PIXEL OFFSET AT THE TOP WHEN DISPLAYING, NOTE THIS IS NOT PRESENT IN THE mapGen's map, which is loaded in with the loadMap function
