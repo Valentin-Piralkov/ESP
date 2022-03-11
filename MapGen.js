@@ -84,6 +84,28 @@ class MapGenerator {
     return newMap;
   }
 
+  makeBiomesReadable(biomeMap, mainMap){ //Function to aid in the reading and creation of biomes
+    let mapLen = biomeMap.length;
+    let newBiomeMap = [];
+    for (let i = 0; i<mapLen; i++){
+      newBiomeMap.push([]);
+      for (let j = 0; j < mapLen; j++){
+        if (biomeMap[i][j] == 0.001){
+          newBiomeMap[i].push(1); //Biome 1
+        } else if (mainMap[i][j] < 0.0039) {
+          newBiomeMap[i].push(2); //Beach
+        } else if (mainMap[i][j] < 0.0042) {
+          newBiomeMap[i].push(3); //Water
+        } else if (mainMap[i][j] < 0.00425) {
+          newBiomeMap[i].push(2); //Beach
+        } else {
+          newBiomeMap[i].push(4); //Biome 2
+        }
+      }
+    }
+    return newBiomeMap;
+  }
+
   average(arr, size){ //Gets the average of all heights nearby, allows the noise to more accurately match terrain
     let arrLen = arr.length;
     let newMap = [];
@@ -232,7 +254,7 @@ class MapGenerator {
     console.time("leveling");
     newMap = mapGen.level(newMap, 10000);
     console.timeEnd("leveling");
-    const biomeMap = mapGen.level(mapGen.average(mapArray, 13), 1000);
+    const biomeMap = mapGen.makeBiomesReadable(mapGen.level(mapGen.average(mapArray, 13), 1000),newMap);
     console.time("map loading");
     mapGen.loadMap(newMap, biomeMap, 13); //Loads in map removing the 13 dead pixels at the top and left of the map
     console.timeEnd("map loading");
@@ -256,13 +278,13 @@ for (let i = -0.9783333, row = 13; i < 1; i+=0.00166666, row++){ //Rudimentary m
   {
     tot += newMap[row][col];
     
-    if (biomeMap[row][col] == 0.001){ //Fills the green areas
+    if (biomeMap[row][col] == 1){ //Fills the green areas
       ctx.fillStyle = "#00"+parseInt((newMap[row][col]*35000)).toString(16) + "00";
-    } else if(newMap[row][col] < 0.0039) { //Fills one part of beach
+    } else if(biomeMap[row][col] == 2) { //Fills one part of beach
       ctx.fillStyle = "#FFFACD";
-    } else if(newMap[row][col] < 0.0042) { //Fills water
+    } else if(biomeMap[row][col] == 3) { //Fills water
       ctx.fillStyle = "#0000"+parseInt((newMap[row][col]*35000)).toString(16);
-    } else if(newMap[row][col] < 0.00425) { // Fills other part of beach
+    } else if(biomeMap[row][col] == 2) { // Fills other part of beach
       ctx.fillStyle = "#FFFACD";
     } else { //Fills biome 2
       ctx.fillStyle = "#"+parseInt((newMap[row][col]*40000)).toString(16).repeat(3);
