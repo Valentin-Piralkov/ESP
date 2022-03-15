@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content = "ie=edge">
+
+    <title>Calendar App</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link href='https://fonts.googleapis.com/css?family=MedievalSharp' rel='stylesheet'>
+</head>
+<body>
+<div id="container">
+    <div id="header">
+
+        <div id="monthDisplay"></div>
+        <div>
+            <button data-modal-target="#customizeModal" id = "customize-button">Customize</button>
+            <button id="backButton">Back</button>
+            <button id="nextButton">Next</button>
+        </div>
+    </div>
+
+    <div id="weekdays">
+        <div>Sunday</div>
+        <div>Monday</div>
+        <div>Tuesday</div>
+        <div>Wednesday</div>
+        <div>Thursday</div>
+        <div>Friday</div>
+        <div>Saturday</div>
+    </div>
+
+    <div id="calendar"></div>
+</div>
+
+<div id="newEventModal">
+    <h2>New Event</h2>
+
+    <input id="eventTitleInput" placeholder="Event Title" />
+
+    <button id="saveButton">Save</button>
+    <button id="cancelButton">Cancel</button>
+</div>
+
+<div id="deleteEventModal">
+    <h2>Event</h2>
+
+    <p id="eventText"></p>
+
+    <button id="deleteButton">Delete</button>
+    <button id="closeButton">Close</button>
+</div>
+
+<div class = "customizeModal" id = "customizeModal">
+    <div class = "customizeModal-header">
+        <h1 id = "header1"> Custom Calendar Settings: </h1>
+        <button data-close-button class = "close-button" id = "close-button">&times;</button>
+    </div>
+    <div class = "customizeModal-body">
+        <form>
+            <div class="mb-3">
+                <label for = "quantity1" class="form-label">Today Year:</label>
+                <input type="number" class="form-control" id="quantity1" >
+                <div id="yearNum" class="form-text">Enter the current year.</div>
+            </div>
+            <div class="mb-3">
+                <label for = "quantity3" class="form-label">Number of Months:</label>
+                <input type="number" class="form-control" id="quantity3" >
+                <div id="monthNum" class="form-text">Enter the amount of months you wish each year to have.</div>
+            </div>
+            <div class="mb-3">
+                <label for="quantity4" class="form-label">Number of Days:</label>
+                <input type="number" class="form-control" id="quantity4">
+            </div>
+            <div class="mb-3 form-check">
+                <label class="form-check-label" for="exampleCheck1">All Months</label>
+                <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                <label for="quantity5" class="form-label">Which Months:</label>
+                <input type="number" class="form-control" id="quantity5">
+            </div>
+            <div class="mb-3">
+                <label for="quantity6" class="form-label">Number of Days:</label>
+                <input type="number" class="form-control" id="quantity6">
+            </div>
+            <div class="mb-3 form-check">
+                <label class="form-check-label" for="exampleCheck2">Remaining Months</label>
+                <input type="checkbox" class="form-check-input" id="exampleCheck2">
+                <label for="quantity7" class="form-label">Which Months:</label>
+                <input type="number" class="form-control" id="quantity7">
+            </div>
+            <div class="mb-3">
+                <label for="quantity8" class="form-label">Number of Days:</label>
+                <input type="number" class="form-control" id="quantity8">
+            </div>
+            <div class="mb-3">
+                <label for="quantity2" class="form-label">Today Day:</label>
+                <input type="number" class="form-control" id="quantity2" >
+            </div>
+            <div class="mb-3">
+                <label for="quantity9" class="form-label">Today Month:</label>
+                <input type="number" class="form-control" id="quantity9">
+            </div>
+        </form>
+            <button data-close-button class="btn btn-cancel">Cancel</button>
+            <button data-close-button id = "fff" >Submit</button>
+    </div>
+</div>
+
+<div id="modalBackDrop"></div>
+<div id = "footer"></div>
+<script src="./script.js"></script>
+</body>
+</html>
